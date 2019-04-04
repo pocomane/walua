@@ -2,10 +2,6 @@
 
 LWDIR="$(dirname $(readlink -f "$0"))"
 
-mkdir walua_build
-cd walua_build
-WORKDIR="$PWD"
-
 # Should be installed: python, cmake
 
 if [ "$1" = "" ]; then
@@ -18,13 +14,17 @@ fi
 
 if [ "$1" = "clear" ]; then
   cd "$WORKDIR"
-  rm -rF emsdk/
+  rm -fR walua_build/
   exit 0
 fi
 
 if [ ! "$1" = "make" ]; then
   exit 0
 fi
+
+mkdir -p walua_build
+cd walua_build
+WORKDIR="$PWD"
 
 cd "$WORKDIR"
 if [ ! -d "emsdk" ]; then
@@ -54,8 +54,8 @@ echo "PATH: $PATH"
 if [ "$PREPARESDK" = "true" ]; then
   cd "$WORKDIR"
   cd emsdk
-  emcc
-  echo -ne '#include <stdio.h>\nint main(){ printf("Ok\n"); }\n' > main.c
+  echo '#include <stdio.h>' > main.c
+  echo 'int main(){ printf(""); }' >> main.c
   emcc main.c
   rm main.c
 fi
