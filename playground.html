@@ -1,0 +1,206 @@
+<!doctype html>
+<html>
+<head>
+    <title>LuaSnip Playground</title>
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <script src='editor-ace.js' type="text/javascript"></script>
+    <script src='walua.js' type="text/javascript"></script>
+    <script type="text/javascript">
+
+      function get_url_data(){
+        var href = document.location.href;
+        var n = href.indexOf('?');
+        if (n>0) {
+          return href.substring(n+1, href.length);
+        }
+        return "";
+      }
+
+     var Module;
+     function WaLuaSet(m){
+        Module = m;
+        Module.print = function() {
+          if (arguments.length > 0) {
+            text = Array.prototype.slice.call(arguments).join(' ');
+            append_output(text);
+          }
+          append_output("\n");
+        };
+        Module.printErr = function() {
+          if (arguments.length > 0) {
+            text = Array.prototype.slice.call(arguments).join(' ');
+            append_output(text);
+          }
+          append_output("\n");
+        }
+      }
+      
+      function clear_output(){
+        document.getElementById("output").innerHTML = "";
+      }
+      
+      function append_output(msg){
+        var o = document.getElementById("output");
+        o.innerHTML = o.innerHTML + msg;
+        console.log(msg)
+      }
+
+      function append_error(msg){
+        var o = document.getElementById("output");
+        o.innerHTML = o.innerHTML + msg;
+        console.log(msg)
+      }
+
+      function init(){
+
+        var exscr = document.getElementById("startup_code").innerHTML;
+
+        var urldata = get_url_data();
+        if (urldata != "") {
+          try {
+            exscr = atob(urldata);
+          } catch (x) {
+            console.log("using default code in the editor")
+            console.log(x)
+          }
+        }
+
+        var editor = ace.edit("editor");
+        editor.session.setMode("ace/mode/lua");
+        editor.setValue(exscr, -1);
+
+        document.getElementById("resizable").onmouseup = function(){
+          // fix to some issue of ACE editor with user resizing...
+          editor.resize();
+        }
+
+        WaLua().then(function(){
+          var L = document.getElementById("lua_global").innerHTML;
+          //fengari.load(L)();
+          clear_output();
+          append_output("Output\n");
+          Module.ccall("run_lua", 'number', ['string'], [L]);
+        });
+      }
+
+      function run_editor_code(){
+
+        if (document.getElementById("appendoutput").checked === false) {
+          clear_output();
+        }
+
+        var editor = ace.edit("editor");
+        var scr = editor.getValue();
+   
+        var e = false;
+        try {
+          //fengari.load(scr, "achunk")();
+          Module.ccall("run_lua", 'number', ['string'], [scr]);
+        } catch (err) {
+          e = String(err) + "\n";
+          append_error(e);
+        }
+
+        if (e) { append_output(e); }
+      }
+
+      function loadfile(){
+        var i = document.getElementById("loadfile");
+        var f = i.files[0];
+        var r = new FileReader();
+        r.readAsText(f, "UTF-8");
+        r.onload = function (evt) {
+          var e = ace.edit("editor");
+          e.setValue(evt.target.result, -1);
+        }
+      }
+
+      function savefile(){
+        var d = ace.edit("editor").getValue();
+        editor.setTheme("ace/theme/monokai");
+        var a = document.getElementById('savelink');
+        a.setAttribute('href', window.URL.createObjectURL(new Blob([d], {type:'text/plain'})));
+        a.click();
+      }
+
+      function get_const_url(){
+        var href = document.location.href;
+        var n = href.indexOf('?');
+        if (n>0) {
+          return href.substring(0,n);
+        }
+        return href;
+      }
+
+      function generatelink(){
+        var d = ace.edit("editor").getValue();
+        append_output("\nthe following link should automatically load the current code:\n");
+        append_output(get_const_url()+'?');
+        append_output(btoa(d));
+        append_output("\n");
+      }
+
+    </script>
+</head>
+<body onload="init()" style="overflow:hidden;margin:0;padding:0" >
+
+<div style="width:100vw;height:100vh;display:flex;flex-direction:column" >
+  <div id="resizable" style="display:flex;flex-direction:column;height:50%;overflow:hidden;flex:0 0 auto;resize:vertical" >
+    <div id="toppanel" style="flex: 1 1 auto;overflow:hidden;widthL100%;height:50%" >
+
+      <div id="editor" style="width:100%;height:100%" ></div>
+
+    </div>
+    <div id="middlemenu" style="flex:0 0 auto" >
+
+      <button type="button" onclick="run_editor_code()" >Run</button>
+      <input type="checkbox" id="appendoutput" checked=true >Append to the output</input>
+      <input type="file" id="loadfile" onchange="loadfile()" style="width:0;height:0" ></input>
+      <button id="loadbutton" onclick="document.getElementById('loadfile').click()" >Load</button>
+      <a id="savelink" style="width:0;height:0" download="script.lua" ></a>
+      <button id="savebutton" onclick="savefile()" >Save</button>
+      <button id="genlink" onclick="generatelink()" >Script link</button>
+
+    </div>
+  </div>
+  <div id="bottompanel" style="overflow:auto;flex:1 1 auto" >
+
+    <pre id="output" >Output...</pre>
+
+  </div>
+</div>
+
+<script id="startup_code" type="text/verbatim">
+
+print [[
+  This is a lua playground
+  - https://lua.org
+
+  It runs the code fully in-browser thanks to Web Assembly
+  - https://webassembly.org
+
+  The official lua VM is used thanks to Emscripten
+  - https://emscripten.org
+
+  It has a nice code editor thanks to ACE
+  - https://ace.c9.io
+]]
+
+print(walua_version(), math.random())
+
+</script>
+
+<script id="lua_global" type="text/verbatim">
+
+-- This is executed when the page is loaded
+function walua_version()
+  return "WaLua 0.1"
+end
+
+</script>
+
+</body>
+</html>
