@@ -19,39 +19,42 @@
         return "";
       }
 
-     var Module;
-     function WaLuaSet(m){
-        Module = m;
-        Module.print = function() {
-          if (arguments.length > 0) {
-            text = Array.prototype.slice.call(arguments).join(' ');
-            append_output(text);
-          }
-          append_output("\n");
-        };
-        Module.printErr = function() {
-          if (arguments.length > 0) {
-            text = Array.prototype.slice.call(arguments).join(' ');
-            append_output(text);
-          }
-          append_output("\n");
+      function run_lua(){
+        requestAnimationFrame(function(){
+          var s = step_lua();
+          //console.log("DEBUG Lua VM step result:",s);
+          if (s != 0) return run_lua();
+          return s;
+        });
+      }
+
+      function run_all(scr){
+        if (document.getElementById("appendoutput").checked === false) {
+          clear_output();
+        }
+        var status = compile_lua(scr);
+        //console.log("DEBUG Lua Compiler result:",status);
+        if (status != 0) {
+          append_error("Error in lua script\n");
+        } else {
+          requestAnimationFrame(run_lua);
         }
       }
-      
+
       function clear_output(){
         document.getElementById("output").innerHTML = "";
       }
       
       function append_output(msg){
         var o = document.getElementById("output");
-        o.innerHTML = o.innerHTML + msg;
-        console.log(msg)
+        o.innerHTML = o.innerHTML + msg + "\n";
+        console.log(msg);
       }
 
       function append_error(msg){
         var o = document.getElementById("output");
         o.innerHTML = o.innerHTML + msg;
-        console.log(msg)
+        console.log(msg);
       }
 
       function init(){
@@ -80,17 +83,11 @@
         WaLua().then(function(){
           var L = document.getElementById("lua_global").innerHTML;
           //fengari.load(L)();
-          clear_output();
-          append_output("Output\n");
-          Module.ccall("run_lua", 'number', ['string'], [L]);
+          run_all(L);
         });
       }
 
       function run_editor_code(){
-
-        if (document.getElementById("appendoutput").checked === false) {
-          clear_output();
-        }
 
         var editor = ace.edit("editor");
         var scr = editor.getValue();
@@ -98,7 +95,7 @@
         var e = false;
         try {
           //fengari.load(scr, "achunk")();
-          Module.ccall("run_lua", 'number', ['string'], [scr]);
+          run_all(scr)
         } catch (err) {
           e = String(err) + "\n";
           append_error(e);
@@ -138,8 +135,7 @@
       function generatelink(){
         var d = ace.edit("editor").getValue();
         append_output("\nthe following link should automatically load the current code:\n");
-        append_output(get_const_url()+'?');
-        append_output(btoa(d));
+        append_output(get_const_url()+'?'+btoa(d));
         append_output("\n");
       }
 
@@ -168,7 +164,7 @@
   </div>
   <div id="bottompanel" style="overflow:auto;flex:1 1 auto" >
 
-    <pre id="output" >Output...</pre>
+    <pre id="output" >Output...<br/></pre>
 
   </div>
 </div>
@@ -189,16 +185,61 @@ print [[
   - https://ace.c9.io
 ]]
 
-print(walua_version(), math.random())
+print(walua_version, math.random())
 
 </script>
 
 <script id="lua_global" type="text/verbatim">
 
--- This is executed when the page is loaded
-function walua_version()
-  return "WaLua 0.1"
-end
+  -- This is executed when the page is loaded
+  walua_version = "WaLua 0.1"
+
+  local function walua_updatable_browser()
+
+    local cocreate, coresume, costatus = coroutine.create, coroutine.resume, coroutine.status
+    local trace, error = debug.traceback, error
+
+    local function makeyield(o)
+     return function(...)
+       local a, b, c, d, e, f, g, h = o(...)
+       coroutine.yield()
+       return a, b, c, d, e, f, g, h
+     end
+    end
+
+    print = makeyield(print)
+    io.write = makeyield(io.write)
+
+    local thread
+
+    WALUA_COMPILE = function(webscript)
+
+     -- TODO : check thread status / delete old thread !??
+
+     local func, err = load(webscript, 'embedded-code')
+     if err then
+       io.stderr:write(err,'\r\n')
+       return -1
+     end
+
+     local wrap = function() xpcall(func, function(err)
+       io.stderr:write(trace(err),'\r\n')
+     end) end
+
+     thread = cocreate(wrap)
+     return 0
+    end
+
+    WALUA_STEP = function()
+
+     coresume(thread)
+
+     if 'suspended' == costatus(thread) then return 1 end
+     return 0
+    end
+  end
+
+  walua_updatable_browser()
 
 </script>
 

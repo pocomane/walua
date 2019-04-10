@@ -59,7 +59,7 @@ walua_make() {
   fi
 
   cd "$WORKDIR"
-  echo 'WaLuaSet(Module);' > prejs.js
+  cp "$LWDIR/main.js" prejs.js
   cp "$LWDIR/walua.c" lua/main.c
 
   if [ "$PREPAREACE" = "true" ]; then
@@ -68,7 +68,7 @@ walua_make() {
   fi
 
   cd "$WORKDIR"
-  emcc -Os lua/*.c -s EXPORTED_FUNCTIONS="['_run_lua']" -s EXTRA_EXPORTED_RUNTIME_METHODS="['ccall', 'cwrap']" -s MODULARIZE=1 -s 'EXPORT_NAME="WaLua"' --pre-js prejs.js -o walua.js
+  emcc -Os lua/*.c -s EXPORTED_FUNCTIONS="['_compile_lua','_continue_lua']" -s EXTRA_EXPORTED_RUNTIME_METHODS="['ccall', 'cwrap']" -s MODULARIZE=1 -s 'EXPORT_NAME="WaLua"' --pre-js prejs.js -o walua.js
 
   cd "$WORKDIR"
   cat "$WORKDIR/ace-builds/src-min/ace.js" > ./editor-ace.js

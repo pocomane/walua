@@ -7,7 +7,7 @@ It downloads the lua sources and Emscripten utilities from the git
 repositories.  However it still depends on some system installed software:
 python, cmake and posix shell and utilities.
 
-# Usage
+# Build
 
 To build using the software from your os use:
 
