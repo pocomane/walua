@@ -28,15 +28,16 @@ docker run --rm -v "$PWD:/DATA" walua
 
 This method requires docker installed and running on your machine.
 
-# Usage
-
 The build script generates a `walua_build` subfolder in the current directory
 containing all the files needed to run the PUC-Rio lua VM in a browser. All the
 sub-folders of `walua_build` can be deleted: they are needed at build time
 only. The only release files are: `walua.js` and `walua.wasm`.
 
-To use walua, you just have to load `walua.js` from a html page. It will expose
-the following global function:
+# Usage
+
+To use walua, you just have to load `walua.js` from a html page, the
+`walua.wasm` will be automatically loaded by it. It will expose the following
+global function:
 
 - `compile_lua` - It accept a string and compile it as lua chunk. It returns `0`
   if all is right, or `-1` if there is an error. In such case, it also write some
@@ -58,24 +59,28 @@ just calls the lua functions stored in the `WALUA_COMPILE` and `WALUA_STEP` glob
 So, for example, the following javascript code:
 
 ```
-compile_lua("WEBCOMPILE = function() error('compilation disabled') end")
+compile_lua("WALUA_COMPILE = function() error('compilation disabled') end")
 ```
 
 will disable any further compilation.
 
-The code compiler and runner is kept simple by purpose: it suppose you write
-your own for your application. A more complex example is in `playground.html`.
+The defult compiler and runner are kept simple by purpose: it supposes that you
+will write one suitable to your application. A more complex example is in
+`playground.html`.
 
 # Playground
 
-In the `walua_build` directory there is also an example that let you to
-edit and run lua code: `playground.html` plus `editor-ace.js`.  It use the
-[ace.js](https://ace.c9.io) editor, that is downloaded from the git
-repository too.  You can try the [on-line
+The build script generatates alaso an example application that let you to edit
+and run lua code in the browser. It is in the `playground.html` file and it
+needs `walua.js`, `walua.wasm` and `editor-ace.js`, generated in the same
+directory.
+
+The playground uses the [ace.js](https://ace.c9.io) editor, that is downloaded
+from the git repository too.  You can try the [on-line
 version](https://raw.githack.com/pocomane/walua/master/walua_build/playground.html).
-You can also run it from disk, but probably you need to configure your
-broser to allows file:// and CORS when loading a file from the disk
-(firefox should do it by default).
+You can also run it from disk, but probably you need to configure your broser
+to allows file:// and CORS when loading a file from the disk (firefox should do
+it by default).
 
 The ouput of the code is updated in a way that seems asyncronous. E.g. [running
 the following code](https://raw.githack.com/pocomane/walua/master/walua_build/playground.html?cHJpbnQnb25lJwpsb2NhbCBzID0gb3MuY2xvY2soKQp3aGlsZSBvcy5jbG9jaygpIC0gcyA8IDIgZG8gZW5kCnByaW50J3R3byc=):
