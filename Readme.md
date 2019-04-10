@@ -77,8 +77,8 @@ You can also run it from disk, but probably you need to configure your
 broser to allows file:// and CORS when loading a file from the disk
 (firefox should do it by default).
 
-The ouput of the code is updated in a way that seems asyncronous. E.g. running
-the following code:
+The ouput of the code is updated in a way that seems asyncronous. E.g. [running
+the following code](https://raw.githack.com/pocomane/walua/master/walua_build/playground.html?cHJpbnQnb25lJwpsb2NhbCBzID0gb3MuY2xvY2soKQp3aGlsZSBvcy5jbG9jaygpIC0gcyA8IDIgZG8gZW5kCnByaW50J3R3byc=):
 
 ```
 print'one'
@@ -96,15 +96,15 @@ user code into a coroutine. In this way after each IO operation the control is
 given to the browser that can update the page. The `step_lua` function is
 continously called until there are no more yields.
 
-To extend this system to other lua function, you have just wrap it in another
-function that yield just before to return. You can do, this for example, with the
+To extend this system to other lua function, you have to wrap e it in another
+one that yield just before to return. You can do this, for example, with the
 `makeyield` lua function in the `playground.html`:
 
 ```
 myfunction = makeyield( myfunction )
 ```
 
-In this way the browser have the chance to update itself just before `myfunction`
+In this way the browser have the chance to update the page before `myfunction`
 returns. No yield parameters/returns are handled, i.e. zero values are always
 passed/returned during the resume/yield phase.
 
