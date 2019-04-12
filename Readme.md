@@ -82,34 +82,48 @@ You can also run it from disk, but probably you need to configure your broser
 to allows file:// and CORS when loading a file from the disk (firefox should do
 it by default).
 
-The ouput of the code is updated in a way that seems asyncronous. E.g. [running
-the following code](https://raw.githack.com/pocomane/walua/master/walua_build/playground.html?cHJpbnQnb25lJwpsb2NhbCBzID0gb3MuY2xvY2soKQp3aGlsZSBvcy5jbG9jaygpIC0gcyA8IDIgZG8gZW5kCnByaW50J3R3byc=):
+The playground uses a error handler to write stack dump in case of error.
+
+Please note that the browser blocks while the script is running, so the browser
+is not updated during the execution. There is a quick workaround in the
+playground.  Normally the [following
+code](https://raw.githack.com/pocomane/walua/master/walua_build/playground.html?cHJpbnQnb25lJwpsb2NhbCBzID0gb3MuY2xvY2soKQp3aGlsZSBvcy5jbG9jaygpIC0gcyA8IDIgZG8gZW5kCnByaW50J3R3byc=):
 
 ```
 print'one'
 local s = os.clock()
-while os.clock() - s < 2 do end
+while os.clock() - s < 1 do end
 print'two'
 ```
 
-you can see the `one` ~2 seconds before the `two`.
+will show `one` and `two` in a single step, after ~1 second.  If you call the
+lua function `set_collaborative()`, the next scripts will start to behave as it
+was asynchronous, i.e. `one` is written immediately, then `two` is written
+after ~1 second. You can switch back to the normal mode with `set_monolitic()`.
 
 The system leverages the collaborative multitasking features of lua and the
-browser. The lua IO operation are overloaded to yield after each operation. The
-lua code compiler and launcher is overloaded too, with one that wrapa the whole
-user code into a coroutine. In this way after each IO operation the control is
-given to the browser that can update the page. The `step_lua` function is
-continously called until there are no more yields.
+browser. `set_collaborative` overloads the lua IO operation to yield after each
+operation. The lua code compiler and launcher is overloaded too, with one that
+wraps the whole user code into a coroutine. In this way after each IO operation
+the control is given to the browser that can update the page.
 
-To extend this system to other lua function, you have to wrap e it in another
-one that yield just before to return. You can do this, for example, with the
-`makeyield` lua function in the `playground.html`:
+Some Notes:
+
+- The `step_lua` javascript function is continously called until there are no
+  more yields.
+- No yield parameters/returns are handled, i.e. zero values are always
+  passed/returned during the resume/yield phase.
+- There can be issues if you call IO operation inside a sub-coroutine.
+
+To extend this system to other lua function, you have to wrap it in another one
+that yield just before to return. You can do this automatically in the
+playground with the utility lua function `yieldwrap`:
 
 ```
-myfunction = makeyield( myfunction )
+yieldwrap( _ENV, 'myfunction' )
+set_collaborative()
 ```
 
-In this way the browser have the chance to update the page before `myfunction`
-returns. No yield parameters/returns are handled, i.e. zero values are always
-passed/returned during the resume/yield phase.
+where `myfunction` is the name of the function to be wrapped. In this way the
+browser have the chance to update the page before `myfunction` returns.
 
