@@ -22,7 +22,7 @@ installed on your machine.
 To build using a container, use:
 
 ```
-docker build -t walua
+docker build -t walua .
 docker run --rm -v "$PWD:/DATA" walua
 ```
 
