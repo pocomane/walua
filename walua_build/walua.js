@@ -610,7 +610,7 @@ function updateGlobalBufferViews() {
  Module["HEAPF64"] = HEAPF64 = new Float64Array(buffer);
 }
 
-var DYNAMIC_BASE = 5264048, DYNAMICTOP_PTR = 20912;
+var DYNAMIC_BASE = 5264080, DYNAMICTOP_PTR = 20944;
 
 var TOTAL_STACK = 5242880;
 
@@ -4578,9 +4578,9 @@ function _getenv(name) {
  return _getenv.ret;
 }
 
-var ___tm_current = 21008;
+var ___tm_current = 21040;
 
-var ___tm_timezone = (stringToUTF8("GMT", 21056, 4), 21056);
+var ___tm_timezone = (stringToUTF8("GMT", 21088, 4), 21088);
 
 function _gmtime_r(time, tmPtr) {
  var date = new Date(HEAP32[time >> 2] * 1e3);
