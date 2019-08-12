@@ -10,6 +10,25 @@
     <script src='walua.js' type="text/javascript"></script>
     <script type="text/javascript">
 
+
+      var editor
+      function editor_init(){
+        editor = ace.edit("editor");
+        editor.session.setMode("ace/mode/lua");
+        editor.setTheme("ace/theme/monokai");
+      }
+      function editor_getText(){
+        var scr = editor.getValue();
+	return scr;
+      }
+      function editor_setText(scr){
+        editor.setValue(scr, -1);
+      }
+      function editor_updateGeometry(){
+        // fix to some issue of ACE editor with user resizing...
+        editor.resize();
+      }
+
       function get_url_data(){
         var href = document.location.href;
         var n = href.indexOf('?');
@@ -71,13 +90,11 @@
           }
         }
 
-        var editor = ace.edit("editor");
-        editor.session.setMode("ace/mode/lua");
-        editor.setValue(exscr, -1);
+	editor_init();
+	editor_setText(exscr);
 
         document.getElementById("resizable").onmouseup = function(){
-          // fix to some issue of ACE editor with user resizing...
-          editor.resize();
+	  editor_updateGeometry();
         }
 
         WaLua().then(function(){
@@ -89,8 +106,7 @@
 
       function run_editor_code(){
 
-        var editor = ace.edit("editor");
-        var scr = editor.getValue();
+	var scr = editor_getText();
    
         var e = false;
         try {
@@ -110,14 +126,12 @@
         var r = new FileReader();
         r.readAsText(f, "UTF-8");
         r.onload = function (evt) {
-          var e = ace.edit("editor");
-          e.setValue(evt.target.result, -1);
+          editor_setText(evt.target.result);
         }
       }
 
       function savefile(){
-        var d = ace.edit("editor").getValue();
-        editor.setTheme("ace/theme/monokai");
+	var d = editor_getText();
         var a = document.getElementById('savelink');
         a.setAttribute('href', window.URL.createObjectURL(new Blob([d], {type:'text/plain'})));
         a.click();
@@ -133,7 +147,7 @@
       }
 
       function generatelink(){
-        var d = ace.edit("editor").getValue();
+        var d = editor_getText();
         append_output("\nthe following link should automatically load the current code:\n");
         append_output(get_const_url()+'?'+btoa(d));
         append_output("\n");
