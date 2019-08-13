@@ -71,10 +71,12 @@ walua_make() {
   emcc -Os lua/*.c -s EXPORTED_FUNCTIONS="['_compile_lua','_continue_lua']" -s EXTRA_EXPORTED_RUNTIME_METHODS="['ccall', 'cwrap']" -s MODULARIZE=1 -s 'EXPORT_NAME="WaLua"' --profiling --pre-js prejs.js -o walua.js
 
   cd "$WORKDIR"
-  cp "$WORKDIR/CodeFlask/build/codeflask.min.js" ./
-  cp "$LWDIR/codeflask.lua.js" ./
-
   cp "$LWDIR/playground.html" ./
+  csplit playground.html '/<script id="INJECT">/+1'
+  mv xx00 playground.html
+  cat "$WORKDIR/CodeFlask/build/codeflask.min.js" >> playground.html
+  cat xx01 >> playground.html
+  rm xx*
 
   cd "$WORKDIR"
   echo "done:"

@@ -72,8 +72,8 @@ will write one suitable to your application. A more complex example is in
 
 The build script generatates alaso an example application that let you to edit
 and run lua code in the browser. It is in the `playground.html` file and it
-needs the following files generated in the same directory: `walua.js`,
-`walua.wasm`, `codeflask.min.js` and `codeflask.lua.js`
+needs the following files generated in the same directory: `walua.wasm` and
+`walua.js`
 
 The playground uses the [codeflask.js](https://kazzkiq.github.io/CodeFlask)
 editor, that is downloaded from the git repository too.  You can try the
