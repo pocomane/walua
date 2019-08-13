@@ -46,8 +46,8 @@ walua_make() {
   if [ ! -d "lua" ]; then
     PREPARELUA="true"
   fi
-  if [ ! -d "ace-builds" ]; then
-    PREPAREACE="true"
+  if [ ! -d "editor-builds" ]; then
+    PREPAREEDITOR="true"
   fi
 
   if [ "$PREPARELUA" = "true" ]; then
@@ -62,18 +62,18 @@ walua_make() {
   cp "$LWDIR/main.js" prejs.js
   cp "$LWDIR/walua.c" lua/main.c
 
-  if [ "$PREPAREACE" = "true" ]; then
+  if [ "$PREPAREEDITOR" = "true" ]; then
     cd "$WORKDIR"
-    git clone https://github.com/ajaxorg/ace-builds
+    git clone https://github.com/kazzkiq/CodeFlask
   fi
 
   cd "$WORKDIR"
   emcc -Os lua/*.c -s EXPORTED_FUNCTIONS="['_compile_lua','_continue_lua']" -s EXTRA_EXPORTED_RUNTIME_METHODS="['ccall', 'cwrap']" -s MODULARIZE=1 -s 'EXPORT_NAME="WaLua"' --profiling --pre-js prejs.js -o walua.js
 
   cd "$WORKDIR"
-  cat "$WORKDIR/ace-builds/src-min/ace.js" > ./editor-ace.js
-  echo ";" >> ./editor-ace.js
-  cat "$WORKDIR/ace-builds/src-min/mode-lua.js" >> ./editor-ace.js
+  cp "$WORKDIR/CodeFlask/build/codeflask.min.js" ./
+  cp "$LWDIR/codeflask.lua.js" ./
+
   cp "$LWDIR/playground.html" ./
 
   cd "$WORKDIR"

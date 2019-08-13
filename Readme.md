@@ -72,11 +72,12 @@ will write one suitable to your application. A more complex example is in
 
 The build script generatates alaso an example application that let you to edit
 and run lua code in the browser. It is in the `playground.html` file and it
-needs `walua.js`, `walua.wasm` and `editor-ace.js`, generated in the same
-directory.
+needs the following files generated in the same directory: `walua.js`,
+`walua.wasm`, `codeflask.min.js` and `codeflask.lua.js`
 
-The playground uses the [ace.js](https://ace.c9.io) editor, that is downloaded
-from the git repository too.  You can try the [on-line
+The playground uses the [codeflask.js](https://kazzkiq.github.io/CodeFlask)
+editor, that is downloaded from the git repository too.  You can try the
+[on-line
 version](https://raw.githack.com/pocomane/walua/master/walua_build/playground.html).
 You can also run it from disk, but probably you need to configure your broser
 to allows file:// and CORS when loading a file from the disk (firefox should do

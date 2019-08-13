@@ -6,27 +6,32 @@
     <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <script src='editor-ace.js' type="text/javascript"></script>
+    <script src='codeflask.min.js' type="text/javascript"></script>
+    <script src='codeflask.lua.js' type="text/javascript"></script>
     <script src='walua.js' type="text/javascript"></script>
     <script type="text/javascript">
 
 
       var editor
       function editor_init(){
-        editor = ace.edit("editor");
-        editor.session.setMode("ace/mode/lua");
-        editor.setTheme("ace/theme/monokai");
+	editor = new CodeFlask("#editor",{
+          language: "lua",
+	  lineNumbers: true
+	});
+	CodeFlaskLua(editor);
+	var el = document.getElementById("editor");
+	if (el.style.position == "") { el.style.position = "relative"; };
+	if (el.style.width == "") { el.style.width = "50%"; };
+	if (el.style.height == "") { el.style.height = "50%"; };
       }
       function editor_getText(){
-        var scr = editor.getValue();
+        var scr = editor.getCode();
 	return scr;
       }
       function editor_setText(scr){
-        editor.setValue(scr, -1);
+	editor.updateCode(scr);
       }
       function editor_updateGeometry(){
-        // fix to some issue of ACE editor with user resizing...
-        editor.resize();
       }
 
       function get_url_data(){
@@ -195,8 +200,8 @@ print [[
   The official lua VM is used thanks to Emscripten
   - https://emscripten.org
 
-  It has a nice code editor thanks to ACE
-  - https://ace.c9.io
+  It has a nice code editor thanks to CodeFlask
+  - https://kazzkiq.github.io/CodeFlask
 ]]
 
 print(walua_version, math.random())
