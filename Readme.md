@@ -7,6 +7,9 @@ It downloads the lua sources and Emscripten utilities from the git
 repositories.  However it still depends on some system installed software:
 python, cmake and posix shell and utilities.
 
+You can try the [on-line
+version](https://raw.githack.com/pocomane/walua/master/walua_build/playground.html).
+
 # Build
 
 To build using the software from your os use:
@@ -71,17 +74,19 @@ will write one suitable to your application. A more complex example is in
 # Playground
 
 The build script generatates alaso an example application that let you to edit
-and run lua code in the browser. It is in the `playground.html` file and it
-needs the following files generated in the same directory: `walua.wasm` and
-`walua.js`
+and run lua code in the browser. The editor is
+[codeflask.js](https://kazzkiq.github.io/CodeFlask) and it is downloaded from
+the git repository too.
 
-The playground uses the [codeflask.js](https://kazzkiq.github.io/CodeFlask)
-editor, that is downloaded from the git repository too.  You can try the
-[on-line
-version](https://raw.githack.com/pocomane/walua/master/walua_build/playground.html).
-You can also run it from disk, but probably you need to configure your broser
-to allows file:// and CORS when loading a file from the disk (firefox should do
-it by default).
+The playground is generated in the `playground.html` file and it embeds all the
+documents it needs to work. The build script also generate a classic version
+with referenced documents. It is composed by the following files:
+`playground_ref.html`, `walua.wasm`, `walua.js` and `codeflask.min.js`.
+
+If you do not have a proper web server, you can also run it from disk. The
+classic version probably needs the browser to be configured properly. I.e.
+file:// and CORS must be allowed when loading a file from the disk. Instead,
+the embedded version should work out of the box.
 
 The playground uses a error handler to write stack dump in case of error.
 

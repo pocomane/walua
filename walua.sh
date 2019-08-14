@@ -70,12 +70,46 @@ walua_make() {
   cd "$WORKDIR"
   emcc -Os lua/*.c -s EXPORTED_FUNCTIONS="['_compile_lua','_continue_lua']" -s EXTRA_EXPORTED_RUNTIME_METHODS="['ccall', 'cwrap']" -s MODULARIZE=1 -s 'EXPORT_NAME="WaLua"' --profiling --pre-js prejs.js -o walua.js
 
+  cp "$WORKDIR/CodeFlask/build/codeflask.min.js" "$WORKDIR"
+
+  # Html with external wasm
   cd "$WORKDIR"
-  cp "$LWDIR/playground.html" ./
-  csplit playground.html '/<script id="INJECT">/+1'
-  mv xx00 playground.html
-  cat "$WORKDIR/CodeFlask/build/codeflask.min.js" >> playground.html
-  cat xx01 >> playground.html
+  OUT="playground_ref.html"
+  rm -f $OUT
+  csplit $LWDIR/playground.html '/<script id="INJECT">/+1'
+  cat xx00 >> $OUT
+  echo "</script>" >> $OUT
+  echo "<script src='walua.js' type='text/javascript'>" >> $OUT
+  echo "</script>" >> $OUT
+  echo "<script src='codeflask.min.js' type='text/javascript'>" >> $OUT
+  cat xx01 >> $OUT
+  rm xx*
+
+  ## Html with embeded wasm
+  cd "$WORKDIR"
+  OUT="playground.html"
+  rm -f $OUT
+  csplit $LWDIR/playground.html '/<script id="INJECT">/+1'
+  cat xx00 >> $OUT
+  mv xx01 end_xx
+  rm xx*
+  csplit "$WORKDIR/walua.js" '/function  *getBinary *()/+1'
+  echo "// EMCC runtime injection" >> $OUT
+  cat xx00 >> $OUT
+  echo "// WASM sub-injection" >> $OUT
+  printf "var WASMCODE=\"" >> $OUT
+  base64 -w 0 walua.wasm >> $OUT
+  echo "\";" >> $OUT
+  echo "return Uint8Array.from(atob(WASMCODE), c => c.charCodeAt(0));" >> $OUT
+  echo "}" >> $OUT
+  echo "function __getBinary_origin(){" >> $OUT
+  cat xx01 >> $OUT
+  echo "</script>" >> $OUT
+  echo "<script type='text/javascript'>" >> $OUT
+  echo "// CodeFlask injection" >> $OUT
+  cat "$WORKDIR/CodeFlask/build/codeflask.min.js" >> $OUT
+  cat end_xx >> $OUT
+  rm end_xx
   rm xx*
 
   cd "$WORKDIR"
