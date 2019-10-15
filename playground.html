@@ -314,6 +314,13 @@ print(walua_version, math.random())
 
 <script id="lua_global" type="text/verbatim">
 
+    -- Hint: change this to customize the code execution behaviour
+    local function core_compile(scr)
+      return load(scr, 'editor-code')
+    end
+
+    --------------------------------------------------------------------
+
     -- This is executed when the page is loaded
     walua_version = "WaLua 0.1"
 
@@ -327,7 +334,7 @@ print(walua_version, math.random())
 
     local monolitic_compile = function(webscript)
 
-     local f, err = load(webscript, 'editor-code')
+     local f, err = core_compile(webscript)
      if err then
        func = func_nop
        io.stderr:write(err,'\r\n')
@@ -356,7 +363,7 @@ print(walua_version, math.random())
 
      -- TODO : check thread status / delete old thread !??
 
-     local func, err = load(webscript, 'editor-code')
+     local func, err = core_compile(webscript)
      if err then
        io.stderr:write(err,'\r\n')
        return -1
