@@ -5388,6 +5388,84 @@ if (typeof exports === 'object' && typeof module === 'object')
 
 // ----------------------------------------------------------------------------
 
+      function lzw_encode(s) {
+          var dict = {};
+          var data = (s + "").split("");
+          var out = [];
+          var currChar;
+          var phrase = data[0];
+          var code = 256;
+          for (var i=1; i<data.length; i++) {
+              currChar=data[i];
+              if (dict[phrase + currChar] != null) {
+                  phrase += currChar;
+              }
+              else {
+                  out.push(phrase.length > 1 ? dict[phrase] : phrase.charCodeAt(0));
+                  dict[phrase + currChar] = code;
+                  code++;
+                  phrase=currChar;
+              }
+          }
+          out.push(phrase.length > 1 ? dict[phrase] : phrase.charCodeAt(0));
+          for (var i=0; i<out.length; i++) {
+              out[i] = String.fromCharCode(out[i]);
+          }
+          return out.join("");
+      }
+
+      function lzw_decode(s) {
+          var dict = {};
+          var data = (s + "").split("");
+          var currChar = data[0];
+          var oldPhrase = currChar;
+          var out = [currChar];
+          var code = 256;
+          var phrase;
+          for (var i=1; i<data.length; i++) {
+              var currCode = data[i].charCodeAt(0);
+              if (currCode < 256) {
+                  phrase = data[i];
+              }
+              else {
+                 phrase = dict[currCode] ? dict[currCode] : (oldPhrase + currChar);
+              }
+              out.push(phrase);
+              currChar = phrase.charAt(0);
+              dict[code] = oldPhrase + currChar;
+              code++;
+              oldPhrase = phrase;
+          }
+          return out.join("");
+      }
+
+      function b64encode(str) {
+          return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g,
+              function toSolidBytes(match, p1) {
+                  return String.fromCharCode('0x' + p1);
+          }));
+      }
+
+      function b64decode(str) {
+          return decodeURIComponent(atob(str).split('').map(function(c) {
+              return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+          }).join(''));
+      }
+
+      function uri_to_script(str){
+        str = b64decode(str);
+        str = lzw_decode(str);
+        return str;
+      }
+
+      function script_to_uri(str){
+        str = lzw_encode(str);
+        str = b64encode(str);
+        return str;
+      }
+
+// ----------------------------------------------------------------------------
+
       var editor
       function editor_init(){
 	editor = new CodeFlask("#editor",{
@@ -5466,7 +5544,7 @@ if (typeof exports === 'object' && typeof module === 'object')
         var urldata = get_url_data();
         if (urldata != "") {
           try {
-            exscr = atob(urldata);
+            exscr = uri_to_script(urldata);
           } catch (x) {
             console.log("using default code in the editor")
             console.log(x)
@@ -5532,7 +5610,7 @@ if (typeof exports === 'object' && typeof module === 'object')
       function generatelink(){
         var d = editor_getText();
         append_output("\nthe following link should automatically load the current code:\n");
-        append_output(get_const_url()+'?'+btoa(d));
+        append_output(get_const_url()+'?'+script_to_uri(d));
         append_output("\n");
       }
 
