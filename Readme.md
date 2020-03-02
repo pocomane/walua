@@ -34,7 +34,9 @@ This method requires docker installed and running on your machine.
 The build script generates a `walua_build` subfolder in the current directory
 containing all the files needed to run the PUC-Rio lua VM in a browser. All the
 sub-folders of `walua_build` can be deleted: they are needed at build time
-only. The only release files are: `walua.js` and `walua.wasm`.
+only. The only release files are: `walua.js` and `walua.wasm`. The
+`walua.merged.js` contains an amalgamation of both `walua.js` and `walua.wasm`
+that can be used as a single file release.
 
 # Usage
 
