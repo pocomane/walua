@@ -72,7 +72,7 @@ walua_make() {
 
   cp "$WORKDIR/CodeFlask/build/codeflask.min.js" "$WORKDIR"
 
-  # Html with external wasm
+  ## Html with external wasm
   cd "$WORKDIR"
   OUT="playground_ref.html"
   rm -f $OUT
@@ -85,14 +85,10 @@ walua_make() {
   cat xx01 >> $OUT
   rm xx*
 
-  ## Html with embeded wasm
+  ## Javascript with embeded wasm
   cd "$WORKDIR"
-  OUT="playground.html"
-  rm -f $OUT
-  csplit $LWDIR/playground.html '/<script id="INJECT">/+1'
-  cat xx00 >> $OUT
-  mv xx01 end_xx
-  rm xx*
+  OUT="walua.merged.js"
+  rm -f "$OUT"
   csplit "$WORKDIR/walua.js" '/function  *getBinary *()/+1'
   echo "// EMCC runtime injection" >> $OUT
   cat xx00 >> $OUT
@@ -104,6 +100,17 @@ walua_make() {
   echo "}" >> $OUT
   echo "function __getBinary_origin(){" >> $OUT
   cat xx01 >> $OUT
+  rm xx*
+
+  ## Html with embeded wasm
+  cd "$WORKDIR"
+  OUT="playground.html"
+  rm -f "$OUT"
+  csplit $LWDIR/playground.html '/<script id="INJECT">/+1'
+  cat xx00 >> $OUT
+  mv xx01 end_xx
+  rm xx*
+  cat "$WORKDIR/walua.merged.js" >> $OUT
   echo "</script>" >> $OUT
   echo "<script type='text/javascript'>" >> $OUT
   echo "// CodeFlask injection" >> $OUT
