@@ -11,246 +11,6 @@
 
     <script type="text/javascript">
 
-// ----------------------------------------------------------------------------
-
-      function addStyleString(str) {
-          var node = document.createElement('style');
-          node.innerHTML = str;
-          document.body.appendChild(node);
-      }
-
-      function CodeFlaskLua( editor ) {
-
-        editor.addLanguage('lua',{
-          comment: /^#!.+|--(?:\[(=*)\[[\s\S]*?\]\1\]|.*)/m,
-          string: {
-            pattern: /(["'])(?:(?!\1)[^\\\r\n]|\\z(?:\r\n|\s)|\\(?:\r\n|[\s\S]))*\1|\[(=*)\[[\s\S]*?\]\2\]/,
-            greedy: !0
-          },
-          number: /\b0x[a-f\d]+\.?[a-f\d]*(?:p[+-]?\d+)?\b|\b\d+(?:\.\B|\.?\d*(?:e[+-]?\d+)?\b)|\B\.\d+(?:e[+-]?\d+)?\b/i,
-          keyword: /\b(?:and|break|do|else|elseif|end|false|for|function|goto|if|in|local|nil|not|or|repeat|return|then|true|until|while)\b/,
-          function: /(?!\d)\w+(?=\s*(?:[({]))/,
-          operator: [/[-+*%^&|#]|\/\/?|<[<=]?|>[>=]?|[=~]=?/, {
-            pattern: /(^|[^.])\.\.(?!\.)/,
-            lookbehind: !0
-          }],
-          punctuation: /[\[\](){},;]|\.+|:+/
-        });
-
-        addStyleString(`
-
-          .token.comment,
-          .token.prolog,
-          .token.doctype,
-          .token.cdata {
-            color: slategray;
-          }
-
-          .token.punctuation {
-            color: #999;
-          }
-
-          .namespace {
-          }
-
-          .token.property,
-          .token.tag,
-          .token.boolean,
-          .token.number,
-          .token.constant,
-          .token.symbol,
-          .token.deleted {
-            color: #905;
-          }
-
-          .token.selector,
-          .token.attr-name,
-          .token.string,
-          .token.char,
-          .token.builtin,
-          .token.inserted {
-            color: #690;
-          }
-
-          .token.operator,
-          .token.entity,
-          .token.url,
-          .language-css .token.string,
-          .style .token.string {
-            color: #9a6e3a;
-          }
-
-          .token.atrule,
-          .token.attr-value,
-          .token.keyword {
-            color: #07a;
-          }
-
-          .token.function,
-          .token.class-name {
-            color: #DD4A68;
-          }
-
-          .token.regex,
-          .token.important,
-          .token.variable {
-            color: #e90;
-          }
-
-          .token.important,
-          .token.bold {
-            font-weight: bold;
-          }
-
-          .token.italic {
-            font-style: italic;
-          }
-
-          .token.entity {
-            cursor: help;
-          }
-        `);
-      };
-
-// ----------------------------------------------------------------------------
-
-      function lzw_encode(s) {
-          var dict = {};
-          var data = (s + "").split("");
-          var out = [];
-          var currChar;
-          var phrase = data[0];
-          var code = 256;
-          for (var i=1; i<data.length; i++) {
-              currChar=data[i];
-              if (dict[phrase + currChar] != null) {
-                  phrase += currChar;
-              }
-              else {
-                  out.push(phrase.length > 1 ? dict[phrase] : phrase.charCodeAt(0));
-                  dict[phrase + currChar] = code;
-                  code++;
-                  phrase=currChar;
-              }
-          }
-          out.push(phrase.length > 1 ? dict[phrase] : phrase.charCodeAt(0));
-          for (var i=0; i<out.length; i++) {
-              out[i] = String.fromCharCode(out[i]);
-          }
-          return out.join("");
-      }
-
-      function lzw_decode(s) {
-          var dict = {};
-          var data = (s + "").split("");
-          var currChar = data[0];
-          var oldPhrase = currChar;
-          var out = [currChar];
-          var code = 256;
-          var phrase;
-          for (var i=1; i<data.length; i++) {
-              var currCode = data[i].charCodeAt(0);
-              if (currCode < 256) {
-                  phrase = data[i];
-              }
-              else {
-                 phrase = dict[currCode] ? dict[currCode] : (oldPhrase + currChar);
-              }
-              out.push(phrase);
-              currChar = phrase.charAt(0);
-              dict[code] = oldPhrase + currChar;
-              code++;
-              oldPhrase = phrase;
-          }
-          return out.join("");
-      }
-
-      function b64encode(str) {
-          return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g,
-              function toSolidBytes(match, p1) {
-                  return String.fromCharCode('0x' + p1);
-          }));
-      }
-
-      function b64decode(str) {
-          return decodeURIComponent(atob(str).split('').map(function(c) {
-              return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-          }).join(''));
-      }
-
-      function uri_to_script(str){
-        str = b64decode(str);
-        str = lzw_decode(str);
-        return str;
-      }
-
-      function script_to_uri(str){
-        str = lzw_encode(str);
-        str = b64encode(str);
-        return str;
-      }
-
-// ----------------------------------------------------------------------------
-
-      var editor
-      function editor_init(){
-	editor = new CodeFlask("#editor",{
-          language: "lua",
-	  lineNumbers: true
-	});
-	CodeFlaskLua(editor);
-	var el = document.getElementById("editor");
-	if (el.style.position == "") { el.style.position = "relative"; };
-	if (el.style.width == "") { el.style.width = "50%"; };
-	if (el.style.height == "") { el.style.height = "50%"; };
-      }
-      function editor_getText(){
-        var scr = editor.getCode();
-	return scr;
-      }
-      function editor_setText(scr){
-	editor.updateCode(scr);
-      }
-      function editor_updateGeometry(){
-      }
-
-// ----------------------------------------------------------------------------
-
-      function get_url_data(){
-        var href = document.location.href;
-        var n = href.indexOf('?');
-        if (n>0) {
-          return href.substring(n+1, href.length);
-        }
-        return "";
-      }
-
-      function run_lua(){
-        requestAnimationFrame(function(){
-          var s = step_lua();
-          //console.log("DEBUG Lua VM step result:",s);
-          if (s != 0) return run_lua();
-          return s;
-        });
-      }
-
-      function run_all(scr){
-        if (document.getElementById("appendoutput").checked === false) {
-          clear_output();
-        }
-        var status = compile_lua(scr);
-        //console.log("DEBUG Lua Compiler result:",status);
-        if (status != 0) {
-          append_error("Error in lua script\n");
-        } else {
-          requestAnimationFrame(run_lua);
-        }
-      }
-
-      function clear_output(){
-        document.getElementById("output").innerHTML = "";
-      }
-      
       function append_output(msg){
         var o = document.getElementById("output");
         o.innerHTML = o.innerHTML + msg + "\n";
@@ -263,262 +23,51 @@
         console.log(msg);
       }
 
-      function init(){
+      function run_lua(){
+        requestAnimationFrame(function(){
+          var s = step_lua();
+          //console.log("DEBUG Lua VM step result:",s);
+          if (s != 0) return run_lua();
+          return s;
+        });
+      }
 
-        var exscr = document.getElementById("startup_code").innerHTML;
-
-        var urldata = get_url_data();
-        if (urldata != "") {
-          try {
-            exscr = uri_to_script(urldata);
-          } catch (x) {
-            console.log("using default code in the editor")
-            console.log(x)
-          }
+      function run_all(scr){
+        var status = compile_lua(scr);
+        //console.log("DEBUG Lua Compiler result:",status);
+        if (status != 0) {
+          append_error("Error in lua script\n");
+        } else {
+          requestAnimationFrame(run_lua);
         }
+      }
 
-	editor_init();
-	editor_setText(exscr);
-
-        document.getElementById("resizable").onmouseup = function(){
-	  editor_updateGeometry();
-        }
-
+      function run_app(){
         WaLua().then(function(){
-          var L = document.getElementById("lua_global").innerHTML;
+          var L = document.getElementById("startup_code").innerHTML;
           //fengari.load(L)();
           run_all(L);
         });
       }
-
-      function run_editor_code(){
-
-	var scr = editor_getText();
-   
-        var e = false;
-        try {
-          //fengari.load(scr, "achunk")();
-          run_all(scr)
-        } catch (err) {
-          e = String(err) + "\n";
-          append_error(e);
-        }
-
-        if (e) { append_output(e); }
-      }
-
-      function loadfile(){
-        var i = document.getElementById("loadfile");
-        var f = i.files[0];
-        var r = new FileReader();
-        r.readAsText(f, "UTF-8");
-        r.onload = function (evt) {
-          editor_setText(evt.target.result);
-        }
-      }
-
-      function savefile(){
-	var d = editor_getText();
-        var a = document.getElementById('savelink');
-        a.setAttribute('href', window.URL.createObjectURL(new Blob([d], {type:'text/plain'})));
-        a.click();
-      }
-
-      function get_const_url(){
-        var href = document.location.href;
-        var n = href.indexOf('?');
-        if (n>0) {
-          return href.substring(0,n);
-        }
-        return href;
-      }
-
-      function generatelink(){
-        var d = editor_getText();
-        append_output("\nthe following link should automatically load the current code:\n");
-        append_output(get_const_url()+'?'+script_to_uri(d));
-        append_output("\n");
-      }
-
     </script>
 </head>
-<body onload="init()" style="overflow:hidden;margin:0;padding:0" >
+<body onload="run_app()" style="overflow:hidden;margin:0;padding:0" >
 
-<div style="width:100vw;height:100vh;display:flex;flex-direction:column" >
-  <div id="resizable" style="display:flex;flex-direction:column;height:50%;overflow:hidden;flex:0 0 auto;resize:vertical" >
-    <div id="toppanel" style="flex: 1 1 auto;overflow:hidden;widthL100%;height:50%" >
+  <div id="output" >Lua code output follows.<br/></div>
 
-      <div id="editor" style="width:100%;height:100%" ></div>
+  <script id="startup_code" type="text/verbatim">
 
-    </div>
-    <div id="middlemenu" style="flex:0 0 auto" >
-
-      <button type="button" onclick="run_editor_code()" >Run</button>
-      <input type="checkbox" id="appendoutput" checked=true >Append to the output</input>
-      <input type="file" id="loadfile" onchange="loadfile()" style="width:0;height:0" ></input>
-      <button id="loadbutton" onclick="document.getElementById('loadfile').click()" >Load</button>
-      <a id="savelink" style="width:0;height:0" download="script.lua" ></a>
-      <button id="savebutton" onclick="savefile()" >Save</button>
-      <button id="genlink" onclick="generatelink()" >Script link</button>
-
-    </div>
-  </div>
-  <div id="bottompanel" style="overflow:auto;flex:1 1 auto" >
-
-    <pre id="output" >Output...<br/></pre>
-
-  </div>
-</div>
-
-<script id="startup_code" type="text/verbatim">
-
-print [[
-  This is a lua playground
-  - https://lua.org
-
-  It runs the code fully in-browser thanks to Web Assembly
-  - https://webassembly.org
-
-  The official lua VM is used thanks to Emscripten
-  - https://emscripten.org
-
-  It has a nice code editor thanks to CodeFlask
-  - https://kazzkiq.github.io/CodeFlask
-]]
-
-print(walua_version, math.random())
-
-</script>
-
-<script id="lua_global" type="text/verbatim">
-
-    -- Hint: change this to customize the code execution behaviour
-    local function core_compile(scr)
-      return load(scr, 'editor-code')
+    print"<br/>"
+    for k in pairs(_ENV) do
+      print(k)
     end
+    print"<br/>"
+    print(walua_version, math.random())
+    print"<br/>"
+    print"<br/>"
+    print"Hello world! All seems ok!"
+    print"<br/>"
 
-    --------------------------------------------------------------------
-
-    -- This is executed when the page is loaded
-    walua_version = "WaLua 0.1"
-
-    --------------------------------------------------------------------
-
-    local cocreate, coresume, costatus = coroutine.create, coroutine.resume, coroutine.status
-    local trace, error = debug.traceback, error
-
-    local func_nop = function() end
-    local func = func_nop
-
-    local monolitic_compile = function(webscript)
-
-     local f, err = core_compile(webscript)
-     if err then
-       func = func_nop
-       io.stderr:write(err,'\r\n')
-       return -1
-     end
-
-     func = function() xpcall(f, function(err)
-       io.stderr:write(trace(err, 2),'\r\n')
-     end) end
-
-     return 0
-    end
-
-    local monolitic_step = function()
-
-      func()
-      func = func_nop
-      return 0
-    end
-
-    --------------------------------------------------------------------
-
-    local thread
-
-    local collaborative_compile = function(webscript)
-
-     -- TODO : check thread status / delete old thread !??
-
-     local func, err = core_compile(webscript)
-     if err then
-       io.stderr:write(err,'\r\n')
-       return -1
-     end
-
-     local wrap = function() xpcall(func, function(err)
-       io.stderr:write(trace(err, 2),'\r\n')
-     end) end
-
-     thread = cocreate(wrap)
-     return 0
-    end
-
-    local collaborative_step = function()
-
-     coresume(thread)
-
-     if 'suspended' == costatus(thread) then return 1 end
-     return 0
-    end
-
-    --------------------------------------------------------------------
-
-    local wrapped = setmetatable({},{__mode="k"})
-
-    function yieldwrap(t, n)
-      local origin = t[n]
-      if 'function' ~= type(origin) then
-        error(tostring(n).." of "..tostring(t).." must be a function")
-      end
-      local parent = wrapped[t]
-      if nil == parent then
-        parent = {}
-        wrapped[t] = parent
-      end
-      if nil ~= parent[n] then
-        error(tostring(n).." of "..tostring(t).." already wrapped")
-      end
-      -- TODO : automatically collect when the parent[n] is set to nil from user code
-      parent[n] = {
-        origin = origin,
-        wrapped = function(...)
-          local a, b, c, d, e, f, g, h = origin(...)
-          coroutine.yield()
-          return a, b, c, d, e, f, g, h
-        end,
-      }
-    end
-
-    function set_monolitic()
-      WALUA_COMPILE = monolitic_compile
-      WALUA_STEP = monolitic_step
-      for k, v in pairs(wrapped) do
-        for n, d in pairs(v) do
-          k[n] = d.origin
-        end
-      end
-    end
-
-    function set_collaborative()
-      WALUA_COMPILE = collaborative_compile
-      WALUA_STEP = collaborative_step
-      for k, v in pairs(wrapped) do
-        for n, d in pairs(v) do
-          k[n] = d.wrapped
-        end
-      end
-    end
-
-    --------------------------------------------------------------------
-
-    yieldwrap(_ENV, 'print')
-    yieldwrap(io, 'write')
-
-    set_monolitic()
-
-</script>
-
+  </script>
 </body>
 </html>

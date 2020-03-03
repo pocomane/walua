@@ -46,9 +46,6 @@ walua_make() {
   if [ ! -d "lua" ]; then
     PREPARELUA="true"
   fi
-  if [ ! -d "editor-builds" ]; then
-    PREPAREEDITOR="true"
-  fi
 
   if [ "$PREPARELUA" = "true" ]; then
     cd "$WORKDIR"
@@ -62,15 +59,8 @@ walua_make() {
   cp "$LWDIR/main.js" prejs.js
   cp "$LWDIR/walua.c" lua/main.c
 
-  if [ "$PREPAREEDITOR" = "true" ]; then
-    cd "$WORKDIR"
-    git clone https://github.com/kazzkiq/CodeFlask
-  fi
-
   cd "$WORKDIR"
   emcc -Os lua/*.c -s EXPORTED_FUNCTIONS="['_compile_lua','_continue_lua']" -s EXTRA_EXPORTED_RUNTIME_METHODS="['ccall', 'cwrap']" -s MODULARIZE=1 -s 'EXPORT_NAME="WaLua"' --profiling --pre-js prejs.js -o walua.js
-
-  cp "$WORKDIR/CodeFlask/build/codeflask.min.js" "$WORKDIR"
 
   ## Html with external wasm
   cd "$WORKDIR"
@@ -80,8 +70,6 @@ walua_make() {
   cat xx00 >> $OUT
   echo "</script>" >> $OUT
   echo "<script src='walua.js' type='text/javascript'>" >> $OUT
-  echo "</script>" >> $OUT
-  echo "<script src='codeflask.min.js' type='text/javascript'>" >> $OUT
   cat xx01 >> $OUT
   rm xx*
 
@@ -104,6 +92,7 @@ walua_make() {
 
   ## Html with embeded wasm
   cd "$WORKDIR"
+  cp $LWDIR/playground.html ./ 
   OUT="playground.html"
   rm -f "$OUT"
   csplit $LWDIR/playground.html '/<script id="INJECT">/+1'
@@ -111,10 +100,6 @@ walua_make() {
   mv xx01 end_xx
   rm xx*
   cat "$WORKDIR/walua.merged.js" >> $OUT
-  echo "</script>" >> $OUT
-  echo "<script type='text/javascript'>" >> $OUT
-  echo "// CodeFlask injection" >> $OUT
-  cat "$WORKDIR/CodeFlask/build/codeflask.min.js" >> $OUT
   cat end_xx >> $OUT
   rm end_xx
   rm xx*

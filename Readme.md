@@ -8,7 +8,7 @@ repositories.  However it still depends on some system installed software:
 python, cmake and posix shell and utilities.
 
 You can try the [on-line
-version](https://raw.githack.com/pocomane/walua/master/walua_build/playground.html).
+version](https://raw.githack.com/pocomane/clientsideutil/master/build/luavm.html).
 
 # Build
 
@@ -32,11 +32,11 @@ docker run --rm -v "$PWD:/DATA" walua
 This method requires docker installed and running on your machine.
 
 The build script generates a `walua_build` subfolder in the current directory
-containing all the files needed to run the PUC-Rio lua VM in a browser. All the
-sub-folders of `walua_build` can be deleted: they are needed at build time
-only. The only release files are: `walua.js` and `walua.wasm`. The
-`walua.merged.js` contains an amalgamation of both `walua.js` and `walua.wasm`
-that can be used as a single file release.
+containing all the files needed to run the PUC-Rio lua VM in a browser. Most of
+the files and sub-folders are just needed at build time. The only release files
+are: `walua.js` and `walua.wasm`. The `walua.merged.js` contains an
+amalgamation of both `walua.js` and `walua.wasm` that can be used as a single
+file release.
 
 # Usage
 
@@ -70,68 +70,19 @@ compile_lua("WALUA_COMPILE = function() error('compilation disabled') end")
 will disable any further compilation.
 
 The defult compiler and runner are kept simple by purpose: it supposes that you
-will write one suitable to your application. A more complex example is in
-`playground.html`.
+will write one suitable to your application. A simple exaple Is in
+`playground.html`. More complex ones can be found int the [Client-side
+tools](https://github.com/pocomane/clientsideutil) project, e.g. [Lua
+playground](https://raw.githack.com/pocomane/clientsideutil/master/build/luavm.html).
 
-# Playground
+# Example
 
-The build script generatates alaso an example application that let you to edit
-and run lua code in the browser. The editor is
-[codeflask.js](https://kazzkiq.github.io/CodeFlask) and it is downloaded from
-the git repository too.
+In the `playground.html` there is a little usage example. The one in the root
+directory is just a template, a runnable amalgamation can be found in the
+distribution directory. It can be run directly from the disk without a proper
+web server.
 
-The playground is generated in the `playground.html` file and it embeds all the
-documents it needs to work. The build script also generate a classic version
-with referenced documents. It is composed by the following files:
-`playground_ref.html`, `walua.wasm`, `walua.js` and `codeflask.min.js`.
+This example just run a lua code snipeet at startup, showing its stdout/stderr. You can easly change the snippet: it is at end of the html file, in the `<script>` tag with id `startup_code`.
 
-If you do not have a proper web server, you can also run it from disk. The
-classic version probably needs the browser to be configured properly. I.e.
-file:// and CORS must be allowed when loading a file from the disk. Instead,
-the embedded version should work out of the box.
-
-The playground uses a error handler to write stack dump in case of error.
-
-Please note that the browser blocks while the script is running, so the browser
-is not updated during the execution. There is a quick workaround in the
-playground.  Normally the [following
-code](https://raw.githack.com/pocomane/walua/master/walua_build/playground.html?cHJpbnQnb25lJwpsb2NhbCBzID0gb3MuY2xvY2soKQp3aGlsZSBvcy5jbG9jaygpIC0gcyA8IDIgZG8gZW5kCnByaW50J3R3byc=):
-
-```
-print'one'
-local s = os.clock()
-while os.clock() - s < 1 do end
-print'two'
-```
-
-will show `one` and `two` in a single step, after ~1 second.  If you call the
-lua function `set_collaborative()`, the next scripts will start to behave as it
-was asynchronous, i.e. `one` is written immediately, then `two` is written
-after ~1 second. You can switch back to the normal mode with `set_monolitic()`.
-
-The system leverages the collaborative multitasking features of lua and the
-browser. `set_collaborative` overloads the lua IO operation to yield after each
-operation. The lua code compiler and launcher is overloaded too, with one that
-wraps the whole user code into a coroutine. In this way after each IO operation
-the control is given to the browser that can update the page.
-
-Some Notes:
-
-- The `step_lua` javascript function is continously called until there are no
-  more yields.
-- No yield parameters/returns are handled, i.e. zero values are always
-  passed/returned during the resume/yield phase.
-- There can be issues if you call IO operation inside a sub-coroutine.
-
-To extend this system to other lua function, you have to wrap it in another one
-that yield just before to return. You can do this automatically in the
-playground with the utility lua function `yieldwrap`:
-
-```
-yieldwrap( _ENV, 'myfunction' )
-set_collaborative()
-```
-
-where `myfunction` is the name of the function to be wrapped. In this way the
-browser have the chance to update the page before `myfunction` returns.
+So... just click on `playground.html` to let the browser run the lua code!
 
