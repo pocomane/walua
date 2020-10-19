@@ -3,6 +3,11 @@
 # Needed for container mode: docker
 # Needed for host mode: python, git, cmake
 
+if [ "$LUAURL" = "" ]; then
+  #LUAURL="git"
+  LUAURL="https://www.lua.org/ftp/lua-5.4.1.tar.gz"
+fi
+
 die() {
   echo "ERROR - $@"
   exit 127
@@ -59,13 +64,29 @@ walua_make() {
 
   if [ "$PREPARELUA" = "true" ]; then
     cd "$WORKDIR"
-    git clone https://github.com/lua/lua
-    cd lua
-    mv onelua.c onelua.c.orig
-    mv lua.c lua.c.origin
+    if [ "$LUAURL" = "git" ]; then
+      git clone https://github.com/lua/lua ||die "extracting lua"
+      cd lua
+      mv onelua.c onelua.c.orig
+      mv lua.c lua.c.origin
+    else
+      curl -L "$LUAURL" --output lua.tar.gz ||die "extracting lua"
+      tar -xzf lua.tar.gz ||die "extracting lua"
+      rm lua.tar.gz ||die "extracting lua"
+      mv lua* lua.tmp ||die "extracting lua"
+      mv lua.tmp/src ./lua ||die "extracting lua"
+      rm -fR lua.tmp ||die "extracting lua"
+      cd lua
+      mv lua.c lua.c.origin
+      mv luac.c luac.c.origin
+    fi
   fi
 
+
   cd "$WORKDIR"
+  echo "Compiling lua version:"
+  grep '#define.*_VERSION' lua/lua.h
+
   cp "$LWDIR/main.js" prejs.js
   cp "$LWDIR/walua.c" lua/main.c
 
