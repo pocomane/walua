@@ -3,6 +3,11 @@
 # Needed for container mode: docker
 # Needed for host mode: python, git, cmake
 
+die() {
+  echo "ERROR - $@"
+  exit 127
+}
+
 LWDIR="$(dirname $(readlink -f "$0"))"
 
 mkdir -p walua_build
@@ -18,26 +23,31 @@ prepare_emscripten(){
   
   if [ "$PREPARESDK" = "true" ]; then
     cd "$WORKDIR"
-    git clone https://github.com/emscripten-core/emsdk.git
-    cd emsdk
+    curl -L https://github.com/emscripten-core/emsdk/archive/2.0.7.tar.gz --output emsdk.tar.gz
+    tar -xzf emsdk.tar.gz ||die "extracting emsdk"
+    rm emsdk.tar.gz ||die "extacting emsdk"
+    mv emsdk-* emsdk/ ||die "extracting emsdk"
+    cd -
+    cd "$WORKDIR/emsdk"
     ./emsdk install latest
     rm ~/.emscripten
+    cd -
   fi
-  CLANGDIR="$WORKDIR/emsdk/clang/$(ls $WORKDIR/emsdk/clang)"
-  EMDIR="$WORKDIR/emsdk/emscripten/$(ls $WORKDIR/emsdk/emscripten)"
+  CLANGDIR="$WORKDIR/emsdk/upstream/bin"
+  EMDIR="$WORKDIR/emsdk/upstream/emscripten"
   NODEDIR="$WORKDIR/emsdk/node/$(ls $WORKDIR/emsdk/node)"
+
+  export BINARYEN="$WORKDIR/emsdk/upstream"
 
   export PATH="$CLANGDIR:$NODEDIR/bin:$EMDIR:$PATH"
   echo "PATH: $PATH"
 
-  if [ "$PREPARESDK" = "true" ]; then
-    cd "$WORKDIR"
-    cd emsdk
-    echo '#include <stdio.h>' > main.c
-    echo 'int main(){ printf(""); }' >> main.c
-    emcc main.c
-    rm main.c
-  fi
+  cd "$WORKDIR"
+  cd emsdk
+  echo '#include <stdio.h>' > main.c
+  echo 'int main(){ printf(""); }' >> main.c
+  emcc main.c ||die "emcc not working"
+  rm main.c
 }
 
 walua_make() {
