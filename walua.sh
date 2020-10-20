@@ -108,16 +108,13 @@ walua_make() {
   cd "$WORKDIR"
   OUT="walua.merged.js"
   rm -f "$OUT"
-  csplit "$WORKDIR/walua.js" '/function  *getBinary *()/+1'
+  csplit "$WORKDIR/walua.js" '/var wasmBinaryFile = "walua.wasm";/+1'
   echo "// EMCC runtime injection" >> $OUT
   cat xx00 >> $OUT
-  echo "// WASM sub-injection" >> $OUT
-  printf "var WASMCODE=\"" >> $OUT
+  printf   '\n// WASM sub-injection - vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv...\n' >> $OUT
+  printf 'var wasmBinaryFile = "data:application/octet-stream;base64,' >> $OUT
   base64 -w 0 walua.wasm >> $OUT
-  echo "\";" >> $OUT
-  echo "return Uint8Array.from(atob(WASMCODE), c => c.charCodeAt(0));" >> $OUT
-  echo "}" >> $OUT
-  echo "function __getBinary_origin(){" >> $OUT
+  printf '";\n// WASM sub-injection - ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^...\n' >> $OUT
   cat xx01 >> $OUT
   rm xx*
 
@@ -129,7 +126,6 @@ walua_make() {
   csplit $LWDIR/playground.html '/<script id="INJECT">/+1'
   cat xx00 >> $OUT
   mv xx01 end_xx
-  rm xx*
   cat "$WORKDIR/walua.merged.js" >> $OUT
   cat end_xx >> $OUT
   rm end_xx
