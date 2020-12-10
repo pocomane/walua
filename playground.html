@@ -58,14 +58,19 @@
   <script id="startup_code" type="text/verbatim">
 
     print"<br/>"
+    print(_VERSION, "Test")
+    print"<br/>"
+    print"Hello world!"
+    print"<br/>"
+    print"<br/>"
     for k in pairs(_ENV) do
       print(k)
     end
     print"<br/>"
-    print(walua_version, math.random())
+    print("a random number:", math.random())
     print"<br/>"
     print"<br/>"
-    print"Hello world! All seems ok!"
+    print"All seems ok!"
     print"<br/>"
 
   </script>

@@ -5,7 +5,7 @@
 
 if [ "$LUAURL" = "" ]; then
   #LUAURL="git"
-  LUAURL="https://www.lua.org/ftp/lua-5.4.1.tar.gz"
+  LUAURL="https://www.lua.org/ftp/lua-5.4.2.tar.gz"
 fi
 
 die() {
